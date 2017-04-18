@@ -1,0 +1,22 @@
+kill用于向任何线程发送信号
+发送信号的函数主要有kill(),raise(),alarm(),pause();
+signal可以将一个信号和函数绑定
+
+如：
+signal(SIGUSR1, sig_func);
+signal(SIGPIPE, sig_func);
+signal(SIGINT,  sig_func);
+signal(SIGSEGV, sig_func);
+那么函数当有这四个信号时，函数sig_func就会执行，
+kill(nThreadID, SIGUSR1)即向线程nThreadID(线程ID)发送一个用户自定义信号SIGUSR1,那么函数sig_func就会被调用
+static int sig_func(int a)
+{
+	if(a == SIGUSR1)
+	{
+		do something;
+	}
+	else if(a == ...)
+	{
+		do something;
+	}	
+}

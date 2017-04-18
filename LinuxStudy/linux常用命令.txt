@@ -1,0 +1,41 @@
+命令: startx        #启动X-Windows桌面
+2、命令: sudo lightdm  #启动Ubuntu的默认桌面
+3、安装gdm桌面: sudo apt-get install gdm
+   启动gdm桌面: gdm
+4、安装Gnome界面:
+   sudo apt-get install gnome-session-fallback
+   或:
+   sudo apt-get install gnome-panel
+5、安装kde桌面:
+   sudo apt-get install kubuntu-desktop
+   安装过程中会询问安装kdm还是gdm;kdm就是Kubuntu桌面;如果想用回gdm或kdm的话,可以使用如下命令对桌面进行重新配置:
+   sudo dpkg-reconfigure <gdm|kdm>
+   安装完KDE桌面之后,还要设置中文环境:
+   sudo apt-get install language-pack-kde-zh language-pack-kde-zh-base language-pack-zh language-pack-zh-base language-support-zh
+另外,Ubuntu上面还可以使用gnome、kde等桌面系统;如果没有这些桌面系统,可以自行安装;
+桌面安装成功之后,还要安装桌面增强组件vbox(virtualbox),命令如下:
+sudo apt-get install virtualbox
+
+6.显示当前目录
+pwd         显示当前路径        
+cd -    返回上一次目录     
+cd ~    返回主目录
+cd 目录名 进入目录
+cd /返回跟目录
+
+7.alt+ctl+enter全屏
+
+8.alt+ctl+t打开终端
+
+9.重命名
+linux下重命名文件或文件夹使用mv既可实现。
+例子：
+①将一个名为abc.txt的文件重命名为1234.txt
+[root@station90 root]#mv abc.txt 1234.txt
+②将目录A重命名为B
+[root@station90 root]#mv A B
+③将a.txt移动到/b下，并重命名为c.txt
+[root@station90 root]#mv a.txt /b/c.txt
+mv new.c new0.c 
+这样就行了
+看到别人的答案，补充一下，cp是复制命令，当然也可以算是重命名，但是那个删除命令，就是rm命令，添加-f的意思是不用提示确认删除，不然系统是会询问是否真的删除，输入y才可以删除，但是加上那个-r不是必要的吧？-r是允许rm命令删除目录，可是怎么看这次都只是删除一个普通的文件而已，当然这也不是绝对的。

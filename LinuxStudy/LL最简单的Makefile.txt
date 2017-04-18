@@ -1,0 +1,14 @@
+程序只有一个test.c文件
+生成可执行文件为:abc.out
+
+Makefile:
+abc.out test.o
+	cc -o abc.out test.o
+test.o:test.c
+	cc -c test.c
+说明:
+1.新行开头必须是tab键
+2.abc.out test.o:生成abc.out所需的文件是test.o
+  cc -o abc.out test.o:abc.out是文件名,test.o是依赖文件
+3.test.o:test.c:生成test.o所需的文件是test.c
+  cc -c test.c:执行编译操作，编译test.c文件

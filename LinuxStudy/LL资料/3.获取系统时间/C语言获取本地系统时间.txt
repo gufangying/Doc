@@ -1,0 +1,32 @@
+#include <stdio.h>
+#include <time.h>
+
+int main(int argc, char* argv[])
+{
+	time_t Time;
+	tm* p;
+	time(&Time);
+	p = localtime(&Time);
+
+	char szBuffer[126];
+	sprintf(szBuffer, asctime(p) );
+
+	getchar();
+
+	return 0;
+}
+
+/*
+localtime获取到的时间，年要+1900，月要+1就是对的，
+或者用asctime也可以转换
+*/
+
+2.linux修改系统时间需要root权限
+time_t NowTime;
+struct tm *pTime;
+time(&NowTime);
+									
+pTime = localtime(&NowTime);									
+pTime->tm_year -= 1;							
+NowTime = mktime(pTime);									
+stime(&NowTime);

@@ -1,0 +1,11 @@
+pid_t是一个typedef定义类型。
+用它来表示进程id类型。
+sys/types.h:
+typedef short           pid_t;       /* used for process ids */
+pid_t就是一个short类型变量，实际表示的是内核中的进程表的索引
+头文件里也不过是个typedef而已.
+使用pid_t而不使用int只是为了可移植性好一些.
+因为在不同的平台上有可能
+typedef int pid_t
+也有可能
+typedef long pid_t

@@ -1,0 +1,785 @@
+﻿
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>Linux之V4L2基础编程 - emouse - 博客园</title>
+<link type="text/css" rel="stylesheet" href="/bundles/blog-common.css?v=umTYGJ1Xbo61obX_Gqsil3krUSBXOilTLax6nesdN401"/>
+<link type="text/css" rel="stylesheet" href="/blog/customcss/98428.css?v=rBMR5vSm%2fTCNQCH0gAe3ZfLhME0%3d"/>
+<link title="RSS" type="application/rss+xml" rel="alternate" href="http://www.cnblogs.com/emouse/rss"/>
+<link title="RSD" type="application/rsd+xml" rel="EditURI" href="http://www.cnblogs.com/emouse/rsd.xml"/>
+<link type="application/wlwmanifest+xml" rel="wlwmanifest" href="http://www.cnblogs.com/emouse/wlwmanifest.xml"/>
+<script src="http://common.cnblogs.com/script/jquery.js" type="text/javascript"></script>  
+<script type="text/javascript">var currentBlogApp = 'emouse', cb_enable_mathjax=false;</script>
+<script src="/bundles/blog-common.js?v=XKoehlJN5H21FBVcSKsnT53hGsKVYw1yJ99ZTW__hhA1" type="text/javascript"></script>
+</head>
+<body>
+<a name="top"></a>
+
+<div id="home">
+<div id="header">
+	<div id="blogTitle">
+		
+<!--done-->
+<div class="title"><a id="Header1_HeaderTitle" class="headermaintitle" href="http://www.cnblogs.com/emouse/"></a></div>
+<div class="subtitle"></div>
+
+
+
+		
+	</div><!--end: blogTitle 博客的标题和副标题 -->
+	<div id="navigator">
+		
+<ul id="navList">
+<li id="nav_sitehome"></li>
+<li id="nav_myhome"><a id="MyLinks1_MyHomeLink" class="menu" href="http://www.cnblogs.com/emouse/">首页</a></li>
+<li id="nav_newpost"><a id="MyLinks1_NewPostLink" class="menu" rel="nofollow" href="http://i.cnblogs.com/EditPosts.aspx?opt=1">新随笔</a></li>
+<li id="nav_contact"><a id="MyLinks1_ContactLink" class="menu" rel="nofollow" href="http://msg.cnblogs.com/send/emouse">联系</a></li>
+<li id="nav_rss"><a id="MyLinks1_Syndication" class="menu" href="http://www.cnblogs.com/emouse/rss">订阅</a>
+<!--<a id="MyLinks1_XMLLink" class="aHeaderXML" href="http://www.cnblogs.com/emouse/rss"><img src="http://www.cnblogs.com/images/xml.gif" alt="订阅" /></a>--></li>
+<li id="nav_admin"><a id="MyLinks1_Admin" class="menu" rel="nofollow" href="http://i.cnblogs.com/">管理</a></li>
+</ul>
+
+		<div class="blogStats">
+			
+			
+<!--done-->
+随笔-264&nbsp;
+文章-0&nbsp;
+评论-120&nbsp;
+
+			
+		</div><!--end: blogStats -->
+	</div><!--end: navigator 博客导航栏 -->
+</div><!--end: header 头部 -->
+<div id="main">
+	<div id="mainContent">
+	<div class="forFlow">
+		
+<div id="post_detail">
+<!--done-->
+<div id="topics">
+	<div class = "post">
+		<h1 class = "postTitle">
+			<a id="cb_post_title_url" class="postTitle2" href="http://www.cnblogs.com/emouse/archive/2013/03/04/2943243.html">Linux之V4L2基础编程</a>
+		</h1>
+		<div class="clear"></div>
+		<div class="postBody">
+			<div id="cnblogs_post_body"><p>本文内容来源于网络，本博客进行整理。</p>
+<h1>1. 定义</h1>
+<p>V4L2(Video For Linux Two) 是内核提供给应用程序访问音、视频驱动的统一接口。</p>
+<h1>2. 工作流程：</h1>
+<p>打开设备－&gt; 检查和设置设备属性－&gt; 设置帧格式－&gt; 设置一种输入输出方法（缓冲 区管理）－&gt; 循环获取数据－&gt; 关闭设备。</p>
+<h1>3. 设备的打开和关闭：</h1>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre>#include &lt;fcntl.h&gt;
+
+<span style="color: #0000ff;">int</span> open(<span style="color: #0000ff;">const</span> <span style="color: #0000ff;">char</span> *device_name, <span style="color: #0000ff;">int</span><span style="color: #000000;"> flags);
+
+#include </span>&lt;unistd.h&gt;
+
+<span style="color: #0000ff;">int</span> clo se(<span style="color: #0000ff;">int</span> fd);</pre>
+</div>
+<p>例：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">int</span> fd=open(&ldquo;/dev/video0&rdquo;,O_RDWR); <span style="color: #008000;">//</span><span style="color: #008000;"> 打开设备</span>
+<span style="color: #000000;">
+close(fd); </span><span style="color: #008000;">//</span><span style="color: #008000;"> 关闭设备</span></pre>
+</div>
+<p>注意：V4L2 的相关定义包含在头文件&lt;linux/videodev2.h&gt; 中.</p>
+<h1>4. 查询设备属性： VIDIOC_QUERYCAP</h1>
+<p>相关函数：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">struct</span> v4l2_capability *argp);</pre>
+</div>
+<p>相关结构体：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_capability
+
+{
+
+u8 driver[</span><span style="color: #800080;">16</span>]; <span style="color: #008000;">//</span><span style="color: #008000;"> 驱动名字</span>
+<span style="color: #000000;">
+u8 card[</span><span style="color: #800080;">32</span>]; <span style="color: #008000;">//</span><span style="color: #008000;"> 设备名字</span>
+<span style="color: #000000;">
+u8 bus_info[</span><span style="color: #800080;">32</span>]; <span style="color: #008000;">//</span><span style="color: #008000;"> 设备在系统中的位置</span>
+<span style="color: #000000;">
+u32 version; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 驱动版本号</span>
+<span style="color: #000000;">
+u32 capabilities; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 设备支持的操作</span>
+<span style="color: #000000;">
+u32 reserved[</span><span style="color: #800080;">4</span>]; <span style="color: #008000;">//</span><span style="color: #008000;"> 保留字段</span>
+<span style="color: #000000;">
+};</span></pre>
+</div>
+<p>capabilities 常用值:</p>
+<p>V4L2_CAP_VIDEO_CAPTURE // 是否支持图像获取</p>
+<p>例：显示设备信息</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_capability cap;
+
+ioctl(fd,VIDIOC_QUERYCAP,</span>&amp;<span style="color: #000000;">cap);
+
+printf(&ldquo;Driver Name:</span>%s\nCard Name:%s\nBus info:%s\nDriver Version:%u.%u.%u\n&rdquo;,cap.driver,cap.card,cap.bus_info,(cap.version&gt;&gt;<span style="color: #800080;">16</span>)&amp;<span style="color: #800080;">0XFF</span>, (cap.version&gt;&gt;<span style="color: #800080;">8</span>)&amp;<span style="color: #800080;">0XFF</span>,cap.version&amp;<span style="color: #800080;">0XFF</span>);</pre>
+</div>
+<h1>5. 设置视频的制式和帧格式</h1>
+<p>制式包括PAL，NTSC，帧的格式个包括宽度和高度等。</p>
+<p>相关函数：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">struct</span> v4l2_fmtdesc *<span style="color: #000000;">argp);
+
+</span><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">struct</span> v4l2_format *argp);</pre>
+</div>
+<p>相关结构体：</p>
+<p>v4l2_cropcap 结构体用来设置摄像头的捕捉能力，在捕捉上视频时应先先设置</p>
+<p>v4l2_cropcap 的 type 域，再通过 VIDIO_CROPCAP 操作命令获取设备捕捉能力的参数，保存于 v4l2_cropcap 结构体中，包括 bounds（最大捕捉方框的左上角坐标和宽高），defrect</p>
+<p>（默认捕捉方框的左上角坐标和宽高）等。</p>
+<p>v4l2_format 结构体用来设置摄像头的视频制式、帧格式等，在设置这个参数时应先填 好 v4l2_format 的各个域，如 type（传输流类型），fmt.pix.width(宽)，</p>
+<p>fmt.pix.heigth(高)，fmt.pix.field(采样区域，如隔行采样)，fmt.pix.pixelformat(采</p>
+<p>样类型，如 YUV4:2:2)，然后通过 VIDIO_S_FMT 操作命令设置视频捕捉格式。如下图所示：</p>
+<p><a href="http://images.cnitblog.com/blog/337520/201303/04183232-4c0698ed294e4c12a642e55b279e6dd1.png"><img style="float: none; margin: 0px auto; display: block;" title="clip_image004" src="http://images.cnitblog.com/blog/337520/201303/04183235-012ac63cbe774cdb9250bc558e9f3b11.png" alt="clip_image004" width="603" height="393" /></a></p>
+<h2>5.1 查询并显示所有支持的格式：VIDIOC_ENUM_FMT</h2>
+<p>相关函数：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">struct</span> v4l2_fmtdesc *argp);</pre>
+</div>
+<p>相关结构体：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_fmtdesc
+
+{
+
+u32 index; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 要查询的格式序号，应用程序设置</span>
+
+<span style="color: #0000ff;">enum</span> v4l2_buf_type type; <span style="color: #008000;">//</span><span style="color: #008000;"> 帧类型，应用程序设置</span>
+<span style="color: #000000;">
+u32 flags; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 是否为压缩格式</span>
+<span style="color: #000000;">
+u8 description[</span><span style="color: #800080;">32</span>]; <span style="color: #008000;">//</span><span style="color: #008000;"> 格式名称</span>
+<span style="color: #000000;">
+u32 pixelformat; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 格式</span>
+<span style="color: #000000;">
+u32 reserved[</span><span style="color: #800080;">4</span>]; <span style="color: #008000;">//</span><span style="color: #008000;"> 保留</span>
+<span style="color: #000000;">
+};</span></pre>
+</div>
+<p>例：显示所有支持的格式</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span> v4l2_fmtdesc fmtdesc; fmtdesc.index=<span style="color: #800080;">0</span>; fmtdesc.type=V4L2_BUF_TYPE_VIDEO_CAPTURE; printf(<span style="color: #800000;">"</span><span style="color: #800000;">Support format:\n</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+
+</span><span style="color: #0000ff;">while</span>(ioctl(fd, VIDIOC_ENUM_FMT, &amp;fmtdesc) != -<span style="color: #800080;">1</span><span style="color: #000000;">)
+
+{
+
+printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">\t%d.%s\n</span><span style="color: #800000;">"</span>,fmtdesc.index+<span style="color: #800080;">1</span><span style="color: #000000;">,fmtdesc.description);
+
+fmtdesc.index</span>++<span style="color: #000000;">;
+
+}</span></pre>
+</div>
+<h2>5.2 查看或设置当前格式： VIDIOC_G_FMT, VIDIOC_S_FMT</h2>
+<p>检查是否支持某种格式：VIDIOC_TRY_FMT</p>
+<p>相关函数：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">struct</span> v4l2_format *argp);</pre>
+</div>
+<p>相关结构体：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_format
+
+{
+
+</span><span style="color: #0000ff;">enum</span> v4l2_buf_type type; <span style="color: #008000;">//</span><span style="color: #008000;"> 帧类型，应用程序设置</span>
+<span style="color: #000000;">
+union fmt
+
+{
+
+</span><span style="color: #0000ff;">struct</span> v4l2_pix_format pix; <span style="color: #008000;">//</span><span style="color: #008000;"> 视频设备使用</span>
+
+<span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_window win;
+
+</span><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_vbi_format vbi;
+
+</span><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_sliced_vbi_format sliced;
+
+u8 raw_data[</span><span style="color: #800080;">200</span><span style="color: #000000;">];
+
+};
+
+};
+
+</span><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_pix_format
+
+{
+
+u32 width; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 帧宽，单位像素</span>
+<span style="color: #000000;">
+u32 height; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 帧高，单位像素</span>
+<span style="color: #000000;">
+u32 pixelformat; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 帧格式</span>
+
+<span style="color: #0000ff;">enum</span><span style="color: #000000;"> v4l2_field field;
+
+u32 bytesperline;
+
+u32 sizeimage;
+
+</span><span style="color: #0000ff;">enum</span><span style="color: #000000;"> v4l2_colorspace colorspace;
+
+u32 priv;
+
+};</span></pre>
+</div>
+<p>例：显示当前帧的相关信息</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span> v4l2_format fmt; fmt.type=V4L2_BUF_TYPE_VIDEO_CAPTURE; ioctl(fd, VIDIOC_G_FMT, &amp;<span style="color: #000000;">fmt);
+
+printf(&ldquo;Current data format information:\n\twidth:</span>%d\n\theight:%<span style="color: #000000;">d\n&rdquo;,
+
+fmt.fmt.pix.width,fmt.fmt.pix.height);
+
+</span><span style="color: #0000ff;">struct</span> v4l2_fmtdesc fmtdesc; fmtdesc.index=<span style="color: #800080;">0</span>; fmtdesc.type=V4L2_BUF_TYPE_VIDEO_CAPTURE; <span style="color: #0000ff;">while</span>(ioctl(fd,VIDIOC_ENUM_FMT,&amp;fmtdesc)!=-<span style="color: #800080;">1</span><span style="color: #000000;">)
+
+{
+
+</span><span style="color: #0000ff;">if</span>(fmtdesc.pixelformat &amp;<span style="color: #000000;"> fmt.fmt.pix.pixelformat)
+
+{
+
+printf(&ldquo;\tformat:</span>%<span style="color: #000000;">s\n&rdquo;,fmtdesc.description);
+
+</span><span style="color: #0000ff;">break</span><span style="color: #000000;">;
+
+}
+
+fmtdesc.index</span>++<span style="color: #000000;">;
+
+}</span></pre>
+</div>
+<p>例：检查是否支持某种帧格式</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span> v4l2_format fmt; fmt.type=V4L2_BUF_TYPE_VIDEO_CAPTURE; fmt.fmt.pix.pixelformat=V4L2_PIX_FMT_RGB32; <span style="color: #0000ff;">if</span>(ioctl(fd,VIDIOC_TRY_FMT,&amp;fmt)==-<span style="color: #800080;">1</span>) <span style="color: #0000ff;">if</span>(errno==<span style="color: #000000;">EINVAL)
+
+printf(&ldquo;not support format RGB32</span>!\n&rdquo;);</pre>
+</div>
+<h1>6. 图像的缩放 VIDIOC_CROPCAP</h1>
+<p>相关函数：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">struct</span> v4l2_cropcap *<span style="color: #000000;">argp);
+
+</span><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">struct</span> v4l2_crop *<span style="color: #000000;">argp);
+
+</span><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">const</span> <span style="color: #0000ff;">struct</span> v4l2_crop *argp);</pre>
+</div>
+<p>相关结构体：</p>
+<p>Cropping 和 scaling 主要指的是图像的取景范围及图片的比例缩放的支持。Crop 就 是把得到的数据作一定的裁剪和伸缩，裁剪可以只取样我们可以得到的图像大小的一部分， 剪裁的主要参数是位置、长度、宽度。而 scale 的设置是通过 VIDIOC_G_FMT 和 VIDIOC_S_FMT 来获得和设置当前的 image 的长度，宽度来实现的。看下图</p>
+<p><a href="http://images.cnitblog.com/blog/337520/201303/04183237-cfa4b6e0856f48d38df6f668be534299.png"><img style="float: none; margin: 0px auto; display: block;" title="image" src="http://images.cnitblog.com/blog/337520/201303/04183241-46398ec8907d460ba4e09de1dd771299.png" alt="image" width="849" height="454" /></a></p>
+<p>我们可以假设 bounds 是 sensor 最大能捕捉到的图像范围，而 defrect 是设备默认 的最大取样范围，这个可以通过 VIDIOC_CROPCAP 的 ioctl 来获得设备的 crap 相关的属 性 v4l2_cropcap，其中的 bounds 就是这个 bounds，其实就是上限。每个设备都有个默 认的取样范围，就是 defrect，就是 default rect 的意思，它比 bounds 要小一些。这 个范围也是通过 VIDIOC_CROPCAP 的 ioctl 来获得的 v4l2_cropcap 结构中的 defrect 来表示的，我们可以通过 VIDIOC_G_CROP 和 VIDIOC_S_CROP 来获取和设置设备当前的 crop 设置。</p>
+<h2>6.1 设置设备捕捉能力的参数</h2>
+<p>相关函数：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">struct</span> v4l2_cropcap *argp);</pre>
+</div>
+<p>相关结构体：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_cropcap
+
+{
+
+</span><span style="color: #0000ff;">enum</span> v4l2_buf_type type; <span style="color: #008000;">//</span><span style="color: #008000;"> 数据流的类型，应用程序设置</span>
+
+<span style="color: #0000ff;">struct</span> v4l2_rect bounds; <span style="color: #008000;">//</span><span style="color: #008000;"> 这是 camera 的镜头能捕捉到的窗口大小的局限</span>
+
+<span style="color: #0000ff;">struct</span> v4l2_rect defrect; <span style="color: #008000;">//</span><span style="color: #008000;"> 定义默认窗口大小，包括起点位置及长,宽的大小，大小以像素为单位</span>
+
+<span style="color: #0000ff;">struct</span> v4l2_fract pixelaspect; <span style="color: #008000;">//</span><span style="color: #008000;"> 定义了图片的宽高比</span>
+<span style="color: #000000;">
+};</span></pre>
+</div>
+<h2>6.2 设置窗口取景参数 VIDIOC_G_CROP 和 VIDIOC_S_CROP</h2>
+<p>相关函数：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">struct</span> v4l2_crop *<span style="color: #000000;">argp);
+
+</span><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">const</span> <span style="color: #0000ff;">struct</span> v4l2_crop *argp);</pre>
+</div>
+<p>相关结构体：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_crop
+
+{
+
+</span><span style="color: #0000ff;">enum</span> v4l2_buf_type type;<span style="color: #008000;">//</span><span style="color: #008000;"> 应用程序设置</span>
+
+<span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_rect c;
+
+}</span></pre>
+</div>
+<h1>7.video Inputs and Outputs</h1>
+<p>VIDIOC_G_INPUT 和 VIDIOC_S_INPUT 用来查询和选则当前的 input，一个 video 设备 节点可能对应多个视频源，比如 saf7113 可以最多支持四路 cvbs 输入，如果上层想在四 个cvbs视频输入间切换，那么就要调用 ioctl(fd, VIDIOC_S_INPUT, &amp;input) 来切换。</p>
+<p>VIDIOC_G_INPUT and VIDIOC_G_OUTPUT 返回当前的 video input和output的index.</p>
+<p>相关函数：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">struct</span> v4l2_input *argp);</pre>
+</div>
+<p>相关结构体：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_input {
+__u32 index; </span><span style="color: #008000;">/*</span><span style="color: #008000;"> Which input </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+__u8 name[</span><span style="color: #800080;">32</span>]; <span style="color: #008000;">/*</span><span style="color: #008000;"> Label </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+__u32 type; </span><span style="color: #008000;">/*</span><span style="color: #008000;"> Type of input </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+__u32 audioset; </span><span style="color: #008000;">/*</span><span style="color: #008000;"> Associated audios (bitfield) </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+__u32 tuner; </span><span style="color: #008000;">/*</span><span style="color: #008000;"> Associated tuner </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+v4l2_std_id std;
+__u32 status;
+__u32 reserved[</span><span style="color: #800080;">4</span><span style="color: #000000;">];
+};</span></pre>
+</div>
+<p>我们可以通过VIDIOC_ENUMINPUT and VIDIOC_ENUMOUTPUT 分别列举一个input或者 output的信息，我们使用一个v4l2_input结构体来存放查询结果，这个结构体中有一个 index域用来指定你索要查询的是第几个input/ouput,如果你所查询的这个input是当前正 在使用的，那么在v4l2_input还会包含一些当前的状态信息，如果所 查询的input/output 不存在，那么回返回EINVAL错误，所以，我们通过循环查找，直到返回错误来遍历所有的 input/output. VIDIOC_G_INPUT and VIDIOC_G_OUTPUT 返回当前的video input和output 的index.</p>
+<p>例： 列举当前输入视频所支持的视频格式</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_input input;
+
+</span><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_standard standard;
+
+memset (</span>&amp;input, <span style="color: #800080;">0</span>, <span style="color: #0000ff;">sizeof</span><span style="color: #000000;"> (input));
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;">首先获得当前输入的 index,注意只是 index，要获得具体的信息，就的调用列举操作</span>
+
+<span style="color: #0000ff;">if</span> (-<span style="color: #800080;">1</span> == ioctl (fd, VIDIOC_G_INPUT, &amp;<span style="color: #000000;">input.index)) {
+
+perror (&rdquo;VIDIOC_G_INPUT&rdquo;);
+
+exit (EXIT_FAILURE);
+
+}
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;">调用列举操作，获得 input.index 对应的输入的具体信息</span>
+
+<span style="color: #0000ff;">if</span> (-<span style="color: #800080;">1</span> == ioctl (fd, VIDIOC_ENUMINPUT, &amp;<span style="color: #000000;">input)) {
+
+perror (&rdquo;VIDIOC_ENUM_INPUT&rdquo;);
+
+exit (EXIT_FAILURE);
+
+}
+
+printf (&rdquo;Current input </span>%s supports:\n&rdquo;, input.name); memset (&amp;standard, <span style="color: #800080;">0</span>, <span style="color: #0000ff;">sizeof</span> (standard)); standard.index = <span style="color: #800080;">0</span><span style="color: #000000;">;
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;">列举所有的所支持的 standard，如果 standard.id 与当前 input 的 input.std 有共同的</span>
+<span style="color: #000000;">
+bit flag，意味着当前的输入支持这个 standard,这样将所有驱动所支持的 standard 列举一个
+
+遍，就可以找到该输入所支持的所有 standard 了。
+
+</span><span style="color: #0000ff;">while</span> (<span style="color: #800080;">0</span> == ioctl (fd, VIDIOC_ENUMSTD, &amp;<span style="color: #000000;">standard)) {
+
+</span><span style="color: #0000ff;">if</span> (standard.id &amp;<span style="color: #000000;"> input.std)
+
+printf (&rdquo;</span>%<span style="color: #000000;">s\n&rdquo;, standard.name);
+
+standard.index</span>++<span style="color: #000000;">;
+
+}
+
+</span><span style="color: #008000;">/*</span><span style="color: #008000;"> EINVAL indicates the end of the enumeration, which cannot be empty unless this device falls under the USB exception. </span><span style="color: #008000;">*/</span>
+
+<span style="color: #0000ff;">if</span> (errno != EINVAL || standard.index == <span style="color: #800080;">0</span><span style="color: #000000;">) {
+
+perror (&rdquo;VIDIOC_ENUMSTD&rdquo;);
+
+exit (EXIT_FAILURE);
+
+}</span></pre>
+</div>
+<h1>8. Video standards</h1>
+<p>相关函数：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre>v4l2_std_id std_id; <span style="color: #008000;">//</span><span style="color: #008000;">这个就是个64bit得数</span>
+
+<span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">struct</span> v4l2_standard *argp);</pre>
+</div>
+<p>相关结构体：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #000000;">typedef u64 v4l2_std_id;
+
+</span><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_standard {
+
+u32 index;
+
+v4l2_std_id id;
+
+u8 name[</span><span style="color: #800080;">24</span><span style="color: #000000;">];
+
+</span><span style="color: #0000ff;">struct</span> v4l2_fract frameperiod; <span style="color: #008000;">/*</span><span style="color: #008000;"> Frames, not fields </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+
+u32 framelines;
+
+u32 reserved[</span><span style="color: #800080;">4</span><span style="color: #000000;">];
+
+};</span></pre>
+</div>
+<p>当然世界上现在有多个视频标准，如NTSC和PAL，他们又细分为好多种，那么我们的设 备输入/输出究竟支持什么样的标准呢？我们的当前在使用的输入和输出正在使用的是哪 个标准呢？我们怎么设置我们的某个输入输出使用的标准呢？这都是有方法的。</p>
+<p>查询我们的输入支持什么标准，首先就得找到当前的这个输入的index，然后查出它的 属性，在其属性里面可以得到该输入所支持的标准，将它所支持的各个标准与所有的标准 的信息进行比较，就可以获知所支持的各个标准的属性。一个输入所支持的标准应该是一 个集合，而这个集合是用bit与的方式用一个64位数字表示。因此我们所查到的是一个数字。</p>
+<p>Example： Information about the current video standard v4l2_std_id std_id; //这个就是个64bit得数</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_standard standard;
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> VIDIOC_G_STD就是获得当前输入使用的standard，不过这里只是得到了该标准的id
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 即flag，还没有得到其具体的属性信息，具体的属性信息要通过列举操作来得到。</span>
+
+<span style="color: #0000ff;">if</span> (-<span style="color: #800080;">1</span> == ioctl (fd, VIDIOC_G_STD, &amp;std_id)) { <span style="color: #008000;">//</span><span style="color: #008000;">获得了当前输入使用的standard
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> Note when VIDIOC_ENUMSTD always returns EINVAL this is no video device
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> or it falls under the USB exception, and VIDIOC_G_STD returning EINVAL
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> is no error.</span>
+<span style="color: #000000;">
+perror (&rdquo;VIDIOC_G_STD&rdquo;);
+
+exit (EXIT_FAILURE);
+
+}
+
+memset (</span>&amp;standard, <span style="color: #800080;">0</span>, <span style="color: #0000ff;">sizeof</span><span style="color: #000000;"> (standard));
+
+standard.index </span>= <span style="color: #800080;">0</span>; <span style="color: #008000;">//</span><span style="color: #008000;">从第一个开始列举
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> VIDIOC_ENUMSTD用来列举所支持的所有的video标准的信息，不过要先给standard
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 结构的index域制定一个数值，所列举的标 准的信息属性包含在standard里面，
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 如果我们所列举的标准和std_id有共同的bit，那么就意味着这个标准就是当前输
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 入所使用的标准，这样我们就得到了当前输入使用的标准的属性信息</span>
+
+<span style="color: #0000ff;">while</span> (<span style="color: #800080;">0</span> == ioctl (fd, VIDIOC_ENUMSTD, &amp;<span style="color: #000000;">standard)) {
+
+</span><span style="color: #0000ff;">if</span> (standard.id &amp;<span style="color: #000000;"> std_id) {
+
+printf (&rdquo;Current video standard: </span>%<span style="color: #000000;">s\n&rdquo;, standard.name);
+
+exit (EXIT_SUCCESS);
+
+}
+
+standard.index</span>++<span style="color: #000000;">;
+
+}
+
+</span><span style="color: #008000;">/*</span><span style="color: #008000;"> EINVAL indicates the end of the enumeration, which cannot be empty unless this device falls under the USB exception. </span><span style="color: #008000;">*/</span>
+
+<span style="color: #0000ff;">if</span> (errno == EINVAL || standard.index == <span style="color: #800080;">0</span><span style="color: #000000;">) {
+
+perror (&rdquo;VIDIOC_ENUMSTD&rdquo;);
+
+exit (EXIT_FAILURE);
+
+}</span></pre>
+</div>
+<h1>9. 申请和管理缓冲区</h1>
+<p>应用程序和设备有三种交换数据的方法，直接 read/write、内存映射(memory mapping)</p>
+<p>和用户指针。这里只讨论内存映射(memory mapping)。</p>
+<h2>9.1 向设备申请缓冲区 VIDIOC_REQBUFS</h2>
+<p>相关函数：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">struct</span> v4l2_requestbuffers *argp);</pre>
+</div>
+<p>相关结构体：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_requestbuffers
+
+{
+
+u32 count; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 缓冲区内缓冲帧的数目</span>
+
+<span style="color: #0000ff;">enum</span> v4l2_buf_type type; <span style="color: #008000;">//</span><span style="color: #008000;"> 缓冲帧数据格式</span>
+
+<span style="color: #0000ff;">enum</span> v4l2_memory memory; <span style="color: #008000;">//</span><span style="color: #008000;"> 区别是内存映射还是用户指针方式</span>
+<span style="color: #000000;">
+u32 reserved[</span><span style="color: #800080;">2</span><span style="color: #000000;">];
+
+};</span></pre>
+</div>
+<p>注：enum v4l2_memoy</p>
+<p>{</p>
+<p>V4L2_MEMORY_MMAP, V4L2_MEMORY_USERPTR</p>
+<p>};</p>
+<p>//count,type,memory 都要应用程序设置</p>
+<p>例：申请一个拥有四个缓冲帧的缓冲区</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_requestbuffers req; 
+
+req.count</span>=<span style="color: #800080;">4</span>; req.type=<span style="color: #000000;">V4L2_BUF_TYPE_VIDEO_CAPTURE; 
+
+req.memory</span>=<span style="color: #000000;">V4L2_MEMORY_MMAP; 
+
+ioctl(fd,VIDIOC_REQBUFS,</span>&amp;req);</pre>
+</div>
+<p>9.2 获取缓冲帧的地址，长度：VIDIOC_QUERYBUF</p>
+<p>相关函数：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">struct</span> v4l2_buffer *argp);</pre>
+</div>
+<p>相关结构体：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_buffer
+
+{
+
+u32 index; </span><span style="color: #008000;">//</span><span style="color: #008000;">buffer 序号</span>
+
+<span style="color: #0000ff;">enum</span> v4l2_buf_type type; <span style="color: #008000;">//</span><span style="color: #008000;">buffer 类型</span>
+<span style="color: #000000;">
+u32 byteused; </span><span style="color: #008000;">//</span><span style="color: #008000;">buffer 中已使用的字节数</span>
+<span style="color: #000000;">
+u32 flags; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 区分是MMAP 还是USERPTR</span>
+
+<span style="color: #0000ff;">enum</span><span style="color: #000000;"> v4l2_field field;
+
+</span><span style="color: #0000ff;">struct</span> timeval timestamp; <span style="color: #008000;">//</span><span style="color: #008000;"> 获取第一个字节时的系统时间</span>
+
+<span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_timecode timecode;
+
+u32 sequence; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 队列中的序号</span>
+
+<span style="color: #0000ff;">enum</span> v4l2_memory memory; <span style="color: #008000;">//</span><span style="color: #008000;">IO 方式，被应用程序设置</span>
+<span style="color: #000000;">
+union m
+
+{
+
+u32 offset; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 缓冲帧地址，只对MMAP 有效</span>
+<span style="color: #000000;">
+unsigned </span><span style="color: #0000ff;">long</span><span style="color: #000000;"> userptr;
+
+};
+
+u32 length; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 缓冲帧长度</span>
+<span style="color: #000000;">
+u32 input;
+
+u32 reserved;
+
+};</span></pre>
+</div>
+<p>9.3 内存映射MMAP 及定义一个结构体来映射每个缓冲帧。 相关结构体：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span><span style="color: #000000;"> buffer
+
+{
+
+</span><span style="color: #0000ff;">void</span>*<span style="color: #000000;"> start;
+
+unsigned </span><span style="color: #0000ff;">int</span><span style="color: #000000;"> length;
+
+}</span>*buffers;</pre>
+</div>
+<p>相关函数：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre>#include &lt;sys/mman.h&gt;
+
+<span style="color: #0000ff;">void</span> *mmap(<span style="color: #0000ff;">void</span> *addr, size_t length, <span style="color: #0000ff;">int</span> prot, <span style="color: #0000ff;">int</span> flags, <span style="color: #0000ff;">int</span> fd, off_t offset)</pre>
+</div>
+<p>//addr 映射起始地址，一般为NULL ，让内核自动选择</p>
+<p>//length 被映射内存块的长度</p>
+<p>//prot 标志映射后能否被读写，其值为PROT_EXEC,PROT_READ,PROT_WRITE, PROT_NONE</p>
+<p>//flags 确定此内存映射能否被其他进程共享，MAP_SHARED,MAP_PRIVATE</p>
+<p>//fd,offset, 确定被映射的内存地址 返回成功映射后的地址，不成功返回MAP_FAILED ((void*)-1)</p>
+<p>相关函数：</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">int</span> munmap(<span style="color: #0000ff;">void</span> *addr, size_t length);<span style="color: #008000;">//</span><span style="color: #008000;"> 断开映射</span></pre>
+</div>
+<p>//addr 为映射后的地址，length 为映射后的内存长度</p>
+<p>例：将四个已申请到的缓冲帧映射到应用程序，用buffers 指针记录。</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre>buffers = (buffer*)calloc (req.count, <span style="color: #0000ff;">sizeof</span> (*<span style="color: #000000;">buffers));
+
+</span><span style="color: #0000ff;">if</span> (!<span style="color: #000000;">buffers) {
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 映射</span>
+<span style="color: #000000;">
+fprintf (stderr, </span><span style="color: #800000;">"</span><span style="color: #800000;">Out of memory/n</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+
+exit (EXIT_FAILURE);
+
+}
+
+</span><span style="color: #0000ff;">for</span> (unsigned <span style="color: #0000ff;">int</span> n_buffers = <span style="color: #800080;">0</span>; n_buffers &lt; req.count; ++<span style="color: #000000;">n_buffers)
+
+{
+
+</span><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_buffer buf;
+
+memset(</span>&amp;buf,<span style="color: #800080;">0</span>,<span style="color: #0000ff;">sizeof</span><span style="color: #000000;">(buf));
+
+buf.type </span>=<span style="color: #000000;"> V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+buf.memory </span>=<span style="color: #000000;"> V4L2_MEMORY_MMAP;
+
+buf.index </span>=<span style="color: #000000;"> n_buffers;
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 查询序号为n_buffers 的缓冲区，得到其起始物理地址和大小</span>
+
+<span style="color: #0000ff;">if</span> (-<span style="color: #800080;">1</span> == ioctl (fd, VIDIOC_QUERYBUF, &amp;<span style="color: #000000;">buf))
+
+exit(</span>-<span style="color: #800080;">1</span><span style="color: #000000;">);
+
+buffers[n_buffers].length </span>=<span style="color: #000000;"> buf.length;
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 映射内存</span>
+<span style="color: #000000;">
+buffers[n_buffers].start </span>=mmap (NULL,buf.length,PROT_READ |<span style="color: #000000;"> PROT_WRITE ,MAP_SHARED,fd, buf.m.offset);
+
+</span><span style="color: #0000ff;">if</span> (MAP_FAILED ==<span style="color: #000000;"> buffers[n_buffers].start)
+
+exit(</span>-<span style="color: #800080;">1</span><span style="color: #000000;">);
+
+}</span></pre>
+</div>
+<h1>10. 缓冲区处理好之后，就可以开始获取数据了</h1>
+<h2>10.1 启动 或 停止数据流 VIDIOC_STREAMON， VIDIOC_STREAMOFF</h2>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">const</span> <span style="color: #0000ff;">int</span> *argp);</pre>
+</div>
+<p>//argp 为流类型指针，如V4L2_BUF_TYPE_VIDEO_CAPTURE.</p>
+<p>10.2 在开始之前，还应当把缓冲帧放入缓冲队列：</p>
+<p>VIDIOC_QBUF// 把帧放入队列</p>
+<p>VIDIOC_DQBUF// 从队列中取出帧</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">int</span> ioctl(<span style="color: #0000ff;">int</span> fd, <span style="color: #0000ff;">int</span> request, <span style="color: #0000ff;">struct</span> v4l2_buffer *argp);</pre>
+</div>
+<p>例：把四个缓冲帧放入队列，并启动数据流</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre>unsigned <span style="color: #0000ff;">int</span><span style="color: #000000;"> i;
+
+</span><span style="color: #0000ff;">enum</span><span style="color: #000000;"> v4l2_buf_type type;
+
+</span><span style="color: #0000ff;">for</span> (i = <span style="color: #800080;">0</span>; i &lt; <span style="color: #800080;">4</span>; ++i) <span style="color: #008000;">//</span><span style="color: #008000;"> 将缓冲帧放入队列</span>
+<span style="color: #000000;">
+{
+
+</span><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_buffer buf;
+
+buf.type </span>=<span style="color: #000000;"> V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+buf.memory </span>=<span style="color: #000000;"> V4L2_MEMORY_MMAP;
+
+buf.index </span>=<span style="color: #000000;"> i;
+
+ioctl (fd, VIDIOC_QBUF, </span>&amp;<span style="color: #000000;">buf);
+
+}
+
+type </span>=<span style="color: #000000;"> V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+ioctl (fd, VIDIOC_STREAMON, </span>&amp;<span style="color: #000000;">type);
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 这有个问题，这些buf 看起来和前面申请的buf 没什么关系，为什么呢?</span></pre>
+</div>
+<p>例：获取一帧并处理</p>
+<div class="cnblogs_code" style="background-color: #f5f5f5; border: #cccccc 1px solid; padding: 5px;">
+<pre><span style="color: #0000ff;">struct</span><span style="color: #000000;"> v4l2_buffer buf; CLEAR (buf);
+
+buf.type </span>=<span style="color: #000000;"> V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+buf.memory </span>=<span style="color: #000000;"> V4L2_MEMORY_MMAP;
+
+ioctl (fd, VIDIOC_DQBUF, </span>&amp;buf); <span style="color: #008000;">//</span><span style="color: #008000;"> 从缓冲区取出一个缓冲帧</span>
+<span style="color: #000000;">
+process_image (buffers[buf.index.]start); </span><span style="color: #008000;">//
+</span><span style="color: #000000;">
+ioctl (fdVIDIOC_QBUF</span>&amp;buf); <span style="color: #008000;">//</span></pre>
+</div></div><div id="MySignature"></div>
+<div class="clear"></div>
+<div id="blog_post_info_block">
+<div id="BlogPostCategory"></div>
+<div id="EntryTag"></div>
+<div id="blog_post_info">
+</div>
+<div class="clear"></div>
+<div id="post_next_prev"></div>
+</div>
+
+
+		</div>
+		<div class = "postDesc">posted @ <span id="post-date">2013-03-04 18:33</span> <a href='http://www.cnblogs.com/emouse/'>emouse</a> 阅读(<span id="post_view_count">...</span>) 评论(<span id="post_comment_count">...</span>)  <a href ="http://i.cnblogs.com/EditPosts.aspx?postid=2943243" rel="nofollow">编辑</a> <a href="#" onclick="AddToWz(2943243);return false;">收藏</a></div>
+	</div>
+	<script type="text/javascript">var allowComments=true,isLogined=false,cb_blogId=98428,cb_entryId=2943243,cb_blogApp=currentBlogApp,cb_blogUserGuid='db8ef88b-ebec-e011-8ee0-842b2b196315',cb_entryCreatedDate='2013/3/4 18:33:00';loadViewCount(cb_entryId);</script>
+	
+</div><!--end: topics 文章、评论容器-->
+</div><a name="!comments"></a><div id="blog-comments-placeholder"></div><script type="text/javascript">var commentManager = new blogCommentManager();commentManager.renderComments(0);</script>
+<div id='comment_form' class='commentform'>
+<a name='commentform'></a>
+<div id='divCommentShow'></div>
+<div id='comment_nav'><span id='span_refresh_tips'></span><a href='javascript:void(0);' onclick='return RefreshCommentList();' id='lnk_RefreshComments' runat='server' clientidmode='Static'>刷新评论</a><a href='#' onclick='return RefreshPage();'>刷新页面</a><a href='#top'>返回顶部</a></div>
+<div id='comment_form_container'></div>
+<div class='ad_text_commentbox' id='ad_text_under_commentbox'></div>
+<div id='ad_t2'></div>
+<div id='opt_under_post'></div>
+<div id='ad_c1' class='c_ad_block'></div>
+<div id='under_post_news'></div>
+<div id='ad_c2' class='c_ad_block'></div>
+<div id='under_post_kb'></div>
+<div id='HistoryToday' class='c_ad_block'></div>
+<script type='text/javascript'>
+$(function () {
+    setTimeout(function () { incrementViewCount(cb_entryId); }, 50);
+    deliverAdT2();
+    deliverAdC1();
+    deliverAdC2();    
+    loadNewsAndKb();
+    loadBlogSignature();
+    LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+    GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate);
+    loadOptUnderPost();
+    GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);    
+});
+</script>
+</div>
+
+
+	</div><!--end: forFlow -->
+	</div><!--end: mainContent 主体内容容器-->
+
+	<div id="sideBar">
+		<div id="sideBarMain">
+			
+<!--done-->
+<div class="newsItem">
+<h3 class="catListTitle">公告</h3>
+	<div id="blog-news"></div><script type="text/javascript">loadBlogNews();</script>
+</div>
+
+			<div id="calendar"><div id="blog-calendar" style="display:none"></div><script type="text/javascript">loadBlogDefaultCalendar();</script></div>
+			
+			<div id="leftcontentcontainer">
+				<div id="blog-sidecolumn"></div><script type="text/javascript">loadBlogSideColumn();</script>
+			</div>
+			
+		</div><!--end: sideBarMain -->
+	</div><!--end: sideBar 侧边栏容器 -->
+	<div class="clear"></div>
+	</div><!--end: main -->
+	<div class="clear"></div>
+	<div id="footer">
+		
+<!--done-->
+Copyright &copy;2016 emouse
+	</div><!--end: footer -->
+</div><!--end: home 自定义的最大容器 -->
+<!--PageEndHtml Block Begin-->
+<!-- Baidu Button BEGIN -->
+<script type="text/javascript" id="bdshare_js" data="type=slide&amp;img=5&amp;pos=right&amp;uid=549243" ></script>
+<script type="text/javascript" id="bdshell_js"></script>
+<script type="text/javascript">
+document.getElementById("bdshell_js").src = "http://bdimg.share.baidu.com/static/js/shell_v2.js?cdnversion=" + Math.ceil(new Date()/3600000);
+</script>
+<!-- Baidu Button END -->
+<script type="text/javascript" src="http://tajs.qq.com/stats?sId=26168746" charset="UTF-8"></script>
+<!--PageEndHtml Block End-->
+</body>
+</html>
